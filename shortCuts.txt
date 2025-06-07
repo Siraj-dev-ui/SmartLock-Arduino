@@ -1,0 +1,7 @@
+PlatformIO
+
+Compile -> ctrl+alt+b
+
+Upload -> ctrl+alt+Upload
+
+SerialMonitor -> ctrl+alt+m
