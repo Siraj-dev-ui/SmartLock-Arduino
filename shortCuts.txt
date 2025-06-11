@@ -2,6 +2,6 @@ PlatformIO
 
 Compile -> ctrl+alt+b
 
-Upload -> ctrl+alt+Upload
+Upload -> ctrl+alt+a
 
 SerialMonitor -> ctrl+alt+m
