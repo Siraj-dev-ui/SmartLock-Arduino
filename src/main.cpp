@@ -10,6 +10,30 @@ void print(String message)
 {
   Serial.println(message);
 }
+
+String GetEspUniqueId()
+{
+  uint64_t chipid = ESP.getEfuseMac();  // Returns the MAC address (48 bits)
+  char uniqueID[13];                    // 12 characters + null terminator
+  sprintf(uniqueID, "%012llX", chipid); // Convert to hex string
+
+  return String(uniqueID); // Return as String
+}
+
+void AdvertiseBLE()
+{
+  String deviceName = "Device_" + GetEspUniqueId();
+  print(deviceName);
+  BLEDevice::init(deviceName.c_str()); // Convert String to const char*
+  // BLEDevice::init("Device_" + GetEspUniqueId());
+  BLEServer *pServer = BLEDevice::createServer();
+
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->start();
+
+  print("Ble Advertising Started...");
+}
+
 void setup()
 {
   // pinMode(REED_PIN, INPUT_PULLUP); // Reed switch between GND and pin
@@ -17,13 +41,15 @@ void setup()
   Serial.begin(115200);
   // Serial.println("Reed Switch Door Sensor Started");
 
-  BLEDevice::init("Myesp32");
-  BLEServer *pServer = BLEDevice::createServer();
+  // BLEDevice::init("Myesp32");
+  // BLEServer *pServer = BLEDevice::createServer();
 
-  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->start();
+  // BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  // pAdvertising->start();
 
-  print("Ble Advertising Started...");
+  // print("Ble Advertising Started...");
+
+  AdvertiseBLE();
 }
 
 void loop()
@@ -40,6 +66,6 @@ void loop()
   //   Serial.println("Door CLOSED");
   // }
 
-  Serial.println("MicroController Working...");
-  delay(200); // Small delay for stability
+  // Serial.println("MicroController Working...");
+  // delay(200); // Small delay for stability
 }
