@@ -3,8 +3,15 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 
+#include <WiFi.h>
+#include <HTTPClient.h>
+
 #define REED_PIN 4 // GPIO connected to reed switch
 #define LED_PIN 2  // GPIO connected to LED (e.g., onboard LED)
+
+const char *ssid = "haider";
+const char *password = "123456789";
+const char *apiUrl = "https://smartlock-nestapi.onrender.com/doors/test";
 
 void print(String message)
 {
@@ -22,16 +29,64 @@ String GetEspUniqueId()
 
 void AdvertiseBLE()
 {
-  String deviceName = "Device_" + GetEspUniqueId();
-  print(deviceName);
-  BLEDevice::init(deviceName.c_str()); // Convert String to const char*
-  // BLEDevice::init("Device_" + GetEspUniqueId());
+  // Get unique ID
+  // String deviceName = "Device_" + GetEspUniqueId();
+  // print(deviceName);
+  // BLEDevice::init(deviceName.c_str()); // Convert String to const char*
+
+  // for testing
+  BLEDevice::init("sirajesp");
+
   BLEServer *pServer = BLEDevice::createServer();
 
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->start();
 
   print("Ble Advertising Started...");
+}
+
+void WifiCall()
+{
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi");
+
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("\nWiFi connected");
+}
+
+void MakeRequest()
+{
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    HTTPClient http;
+    http.begin(apiUrl); // Specify the URL
+
+    int httpResponseCode = http.GET(); // Make GET request
+
+    if (httpResponseCode > 0)
+    {
+      String payload = http.getString();
+      Serial.println("Response code: " + String(httpResponseCode));
+      Serial.println("Response payload: " + payload);
+    }
+    else
+    {
+      Serial.println("Error on HTTP request");
+    }
+
+    http.end(); // Free resources
+  }
+  else
+  {
+    Serial.println("WiFi not connected");
+  }
+
+  delay(10000); // Wait 10 seconds before next request
 }
 
 void setup()
@@ -41,15 +96,12 @@ void setup()
   Serial.begin(115200);
   // Serial.println("Reed Switch Door Sensor Started");
 
-  // BLEDevice::init("Myesp32");
-  // BLEServer *pServer = BLEDevice::createServer();
+  // bluetooth code
+  // AdvertiseBLE();
 
-  // BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  // pAdvertising->start();
+  // calling api over wifi
 
-  // print("Ble Advertising Started...");
-
-  AdvertiseBLE();
+  WifiCall();
 }
 
 void loop()
@@ -68,4 +120,6 @@ void loop()
 
   // Serial.println("MicroController Working...");
   // delay(200); // Small delay for stability
+
+  MakeRequest();
 }
