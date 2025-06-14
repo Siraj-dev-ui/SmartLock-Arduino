@@ -66,12 +66,12 @@ void ConnectWifi()
   Serial.println("\nWiFi connected");
 }
 
-void MakeRequest()
+void MakeRequest(const String &url)
 {
   if (WiFi.status() == WL_CONNECTED)
   {
     HTTPClient http;
-    http.begin(apiUrl); // Specify the URL
+    http.begin(url); // Specify the URL
 
     int httpResponseCode = http.GET(); // Make GET request
 
@@ -93,37 +93,7 @@ void MakeRequest()
     Serial.println("WiFi not connected");
   }
 
-  delay(10000); // Wait 10 seconds before next request
-}
-
-// String sendGetRequest(const String& url) {
-String sendGetRequest()
-{
-  HTTPClient http;
-
-  if (WiFi.status() == WL_CONNECTED)
-  {
-    http.begin(apiUrl);        // Start connection
-    int httpCode = http.GET(); // Send GET request
-
-    if (httpCode > 0)
-    {
-      String response = http.getString();
-      http.end();      // Free resources
-      return response; // Return response
-    }
-    else
-    {
-      Serial.print("GET request failed. Error: ");
-      Serial.println(httpCode);
-      http.end();
-      return "ERROR: GET failed with code " + String(httpCode);
-    }
-  }
-  else
-  {
-    return "ERROR: WiFi not connected";
-  }
+  // delay(10000); // Wait 10 seconds before next request
 }
 
 void sendPostRequestWithBooleanSimple(const String &url, bool value)
@@ -171,8 +141,8 @@ void setup()
   // calling api over wifi
 
   ConnectWifi();
-  sendPostRequestWithBooleanSimple(apiUrl, false);
-  // MakeRequest();
+  // sendPostRequestWithBooleanSimple(apiUrl, false);
+  MakeRequest("http://192.168.0.104:3000/actions/active-action");
 
   // String apiUrl = "http://example.com/api";
   // // String result = sendGetRequest(apiUrl);
@@ -205,3 +175,35 @@ void loop()
 
   // MakeRequest();
 }
+
+// extras
+
+// // String sendGetRequest(const String& url) {
+// String sendGetRequest()
+// {
+//   HTTPClient http;
+
+//   if (WiFi.status() == WL_CONNECTED)
+//   {
+//     http.begin(apiUrl);        // Start connection
+//     int httpCode = http.GET(); // Send GET request
+
+//     if (httpCode > 0)
+//     {
+//       String response = http.getString();
+//       http.end();      // Free resources
+//       return response; // Return response
+//     }
+//     else
+//     {
+//       Serial.print("GET request failed. Error: ");
+//       Serial.println(httpCode);
+//       http.end();
+//       return "ERROR: GET failed with code " + String(httpCode);
+//     }
+//   }
+//   else
+//   {
+//     return "ERROR: WiFi not connected";
+//   }
+// }
