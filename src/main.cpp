@@ -1,4 +1,4 @@
-#include "sercrets.h"
+#include "secrets.h"
 
 #include <Arduino.h> // Required for PlatformIO (C++)
 #include <BLEDevice.h>
