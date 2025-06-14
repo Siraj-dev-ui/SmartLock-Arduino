@@ -25,14 +25,14 @@ void print(String message)
   Serial.println(message);
 }
 
-String GetEspUniqueId()
-{
-  uint64_t chipid = ESP.getEfuseMac();  // Returns the MAC address (48 bits)
-  char uniqueID[13];                    // 12 characters + null terminator
-  sprintf(uniqueID, "%012llX", chipid); // Convert to hex string
+// String GetEspUniqueId()
+// {
+//   uint64_t chipid = ESP.getEfuseMac();  // Returns the MAC address (48 bits)
+//   char uniqueID[13];                    // 12 characters + null terminator
+//   sprintf(uniqueID, "%012llX", chipid); // Convert to hex string
 
-  return String(uniqueID); // Return as String
-}
+//   return String(uniqueID); // Return as String
+// }
 
 void AdvertiseBLE()
 {
@@ -44,7 +44,8 @@ void AdvertiseBLE()
   // for testing
   BLEDevice::init("sirajesp");
 
-  BLEServer *pServer = BLEDevice::createServer();
+  // BLEServer *pServer = BLEDevice::createServer();
+  BLEDevice::createServer();
 
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->start();
@@ -136,13 +137,13 @@ void setup()
   // Serial.println("Reed Switch Door Sensor Started");
 
   // bluetooth code
-  // AdvertiseBLE();
+  AdvertiseBLE();
 
   // calling api over wifi
 
   ConnectWifi();
   // sendPostRequestWithBooleanSimple(apiUrl, false);
-  MakeRequest("http://192.168.0.104:3000/actions/active-action");
+  // MakeRequest("http://192.168.0.104:3000/actions/active-action");
 
   // String apiUrl = "http://example.com/api";
   // // String result = sendGetRequest(apiUrl);
