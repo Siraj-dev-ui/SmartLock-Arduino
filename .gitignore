@@ -4,5 +4,10 @@
 .vscode/launch.json
 .vscode/ipch
 /secrets.h
+/main_siraj.cpp
+/tempmain.cpp
+
 /src/secrets.h
+/src/main_siraj.cpp
+/src/tempmain.cpp
 
