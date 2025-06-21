@@ -60,7 +60,7 @@ void AdvertiseBLE()
   // BLEDevice::init(deviceName.c_str()); // Convert String to const char*
 
   // for testing
-  BLEDevice::init("sirajesp");
+  BLEDevice::init("Device_E0891425BF58");
 
   // BLEServer *pServer = BLEDevice::createServer();
   BLEDevice::createServer();
@@ -159,12 +159,12 @@ void setup()
   Serial.println("DOOR STATUS  | OCCUPANCY  | ENERGY MODE");
   Serial.println("----------------------------------");
 
-  // bluetooth code
-  AdvertiseBLE();
-
   // calling api over wifi
 
   ConnectWifi();
+
+  // bluetooth code
+  AdvertiseBLE();
   // sendPostRequestWithBooleanSimple(apiUrl, false);
   // MakeRequest("http://192.168.0.104:3000/actions/active-action");
 
