@@ -30,13 +30,10 @@ unsigned long doorAlertTime = 0;
 bool ledState = LOW;
 bool energySaveActive = false;
 
-// // mobile
-// const char *ssid = "haider";
-// const char *password = "123456789";
-
 // home
 // const char *apiUrl = "https://smartlock-nestapi.onrender.com/doors/test";
-const char *apiUrl = "http://192.168.0.104:3000/doors/testpost";
+const char *apiUrl = "http://192.168.0.104:3000/actions/active-action";
+uint8_t activeAction = 0;
 
 void print(String message)
 {
@@ -96,9 +93,11 @@ void MakeRequest(const String &url)
 
     if (httpResponseCode > 0)
     {
+      Serial.println("Active Action ...");
       String payload = http.getString();
       Serial.println("Response code: " + String(httpResponseCode));
       Serial.println("Response payload: " + payload);
+      activeAction = payload.toInt();
     }
     else
     {
@@ -115,7 +114,7 @@ void MakeRequest(const String &url)
   // delay(10000); // Wait 10 seconds before next request
 }
 
-void sendPostRequestWithBooleanSimple(const String &url, bool value)
+void SmartLockPostman(const String &url, int number)
 {
   if (WiFi.status() == WL_CONNECTED)
   {
@@ -123,8 +122,8 @@ void sendPostRequestWithBooleanSimple(const String &url, bool value)
     http.begin(url);
     http.addHeader("Content-Type", "application/json");
 
-    // Manually create JSON string
-    String requestBody = String("{\"value\":") + (value ? "true" : "false") + "}";
+    // Create JSON with number value
+    String requestBody = String("{\"command\":") + String(number) + "}";
 
     int httpResponseCode = http.POST(requestBody);
 
@@ -147,6 +146,7 @@ void sendPostRequestWithBooleanSimple(const String &url, bool value)
     Serial.println("WiFi not connected");
   }
 }
+
 void setup()
 {
   pinMode(REED_PIN, INPUT_PULLUP);
@@ -182,111 +182,100 @@ void setup()
 
 void loop()
 {
-  bool isDoorClosed = (digitalRead(REED_PIN) == LOW);
-  bool isMotionDetected = (digitalRead(PIR_PIN) == HIGH);
-  unsigned long currentMillis = millis();
+  // bool isDoorClosed = (digitalRead(REED_PIN) == LOW);
+  // bool isMotionDetected = (digitalRead(PIR_PIN) == HIGH);
+  // unsigned long currentMillis = millis();
 
-  // Update motion detection
-  if (isMotionDetected)
+  // // Update motion detection
+  // if (isMotionDetected)
+  // {
+  //   lastMotionTime = currentMillis;
+  //   if (energySaveActive)
+  //   {
+  //     energySaveActive = false;
+  //     Serial.println("\n✅ Motion detected - Energy mode OFF");
+  //     Serial.println("----------------------------------");
+  //   }
+  // }
+
+  // // Check energy save condition
+  // bool shouldEnergySave = (currentMillis - lastMotionTime > MOTION_TIMEOUT);
+
+  // // Energy save activation
+  // if (shouldEnergySave && !energySaveActive)
+  // {
+  //   energySaveActive = true;
+  //   Serial.println("\n🚨 ENERGY SAVING MODE ACTIVATED!");
+  //   Serial.println("--> ACTION REQUIRED: Switch OFF lights and AC");
+  //   Serial.println("----------------------------------");
+  // }
+
+  // // Door state changes
+  // static bool lastDoorState = !isDoorClosed;
+  // if (isDoorClosed != lastDoorState)
+  // {
+  //   lastDoorState = isDoorClosed;
+  //   Serial.println(isDoorClosed ? "✅ Door CLOSED" : "🚪 Door OPENED");
+
+  //   // Trigger door alert LED
+  //   if (!isDoorClosed)
+  //   {
+  //     doorAlertTime = currentMillis;
+  //   }
+  // }
+
+  // // LED control
+  // if (energySaveActive)
+  // {
+  //   // Blink LED during energy save
+  //   if (currentMillis - lastBlinkTime > BLINK_INTERVAL)
+  //   {
+  //     ledState = !ledState;
+  //     digitalWrite(LED_PIN, ledState);
+  //     lastBlinkTime = currentMillis;
+  //   }
+  // }
+  // else if (!isDoorClosed && (currentMillis - doorAlertTime < DOOR_ALERT_DURATION))
+  // {
+  //   // Solid LED for door alerts
+  //   digitalWrite(LED_PIN, HIGH);
+  // }
+  // else
+  // {
+  //   digitalWrite(LED_PIN, LOW);
+  // }
+
+  // // Periodic status update
+  // static unsigned long lastStatusUpdate = 0;
+  // if (currentMillis - lastStatusUpdate > 5000)
+  // {
+  //   lastStatusUpdate = currentMillis;
+  //   Serial.print(isDoorClosed ? "🚪 CLOSED    | " : "🚪 OPEN      | ");
+  //   Serial.print(isMotionDetected ? "👥 OCCUPIED | " : "👤 EMPTY    | ");
+  //   Serial.println(energySaveActive ? "🔴 ENERGY SAVE" : "🟢 NORMAL");
+  // }
+
+  // Check Active Action
+
+  // MakeRequest(apiUrl);
+  MakeRequest(String(BASE_URL) + "/actions/active-action");
+
+  Serial.println(activeAction);
+
+  switch (activeAction)
   {
-    lastMotionTime = currentMillis;
-    if (energySaveActive)
-    {
-      energySaveActive = false;
-      Serial.println("\n✅ Motion detected - Energy mode OFF");
-      Serial.println("----------------------------------");
-    }
-  }
+  case 1:
+    Serial.println("Lock the door.");
+    SmartLockPostman(String(BASE_URL) + "/actions/smartlock-postman", 1);
+    break;
+  case 2:
+    Serial.println("Unlock the door..");
+    SmartLockPostman(String(BASE_URL) + "/actions/smartlock-postman", 2);
+    break;
 
-  // Check energy save condition
-  bool shouldEnergySave = (currentMillis - lastMotionTime > MOTION_TIMEOUT);
-
-  // Energy save activation
-  if (shouldEnergySave && !energySaveActive)
-  {
-    energySaveActive = true;
-    Serial.println("\n🚨 ENERGY SAVING MODE ACTIVATED!");
-    Serial.println("--> ACTION REQUIRED: Switch OFF lights and AC");
-    Serial.println("----------------------------------");
+    // default:
+    //   break;
   }
-
-  // Door state changes
-  static bool lastDoorState = !isDoorClosed;
-  if (isDoorClosed != lastDoorState)
-  {
-    lastDoorState = isDoorClosed;
-    Serial.println(isDoorClosed ? "✅ Door CLOSED" : "🚪 Door OPENED");
-
-    // Trigger door alert LED
-    if (!isDoorClosed)
-    {
-      doorAlertTime = currentMillis;
-    }
-  }
-
-  // LED control
-  if (energySaveActive)
-  {
-    // Blink LED during energy save
-    if (currentMillis - lastBlinkTime > BLINK_INTERVAL)
-    {
-      ledState = !ledState;
-      digitalWrite(LED_PIN, ledState);
-      lastBlinkTime = currentMillis;
-    }
-  }
-  else if (!isDoorClosed && (currentMillis - doorAlertTime < DOOR_ALERT_DURATION))
-  {
-    // Solid LED for door alerts
-    digitalWrite(LED_PIN, HIGH);
-  }
-  else
-  {
-    digitalWrite(LED_PIN, LOW);
-  }
-
-  // Periodic status update
-  static unsigned long lastStatusUpdate = 0;
-  if (currentMillis - lastStatusUpdate > 5000)
-  {
-    lastStatusUpdate = currentMillis;
-    Serial.print(isDoorClosed ? "🚪 CLOSED    | " : "🚪 OPEN      | ");
-    Serial.print(isMotionDetected ? "👥 OCCUPIED | " : "👤 EMPTY    | ");
-    Serial.println(energySaveActive ? "🔴 ENERGY SAVE" : "🟢 NORMAL");
-  }
-
-  delay(100);
-  // MakeRequest();
+  delay(1000);
+  // delay(10000);
 }
-
-// extras
-
-// // String sendGetRequest(const String& url) {
-// String sendGetRequest()
-// {
-//   HTTPClient http;
-
-//   if (WiFi.status() == WL_CONNECTED)
-//   {
-//     http.begin(apiUrl);        // Start connection
-//     int httpCode = http.GET(); // Send GET request
-
-//     if (httpCode > 0)
-//     {
-//       String response = http.getString();
-//       http.end();      // Free resources
-//       return response; // Return response
-//     }
-//     else
-//     {
-//       Serial.print("GET request failed. Error: ");
-//       Serial.println(httpCode);
-//       http.end();
-//       return "ERROR: GET failed with code " + String(httpCode);
-//     }
-//   }
-//   else
-//   {
-//     return "ERROR: WiFi not connected";
-//   }
-// }
