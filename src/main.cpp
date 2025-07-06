@@ -29,14 +29,14 @@ unsigned long doorAlertTime = 0;
 bool ledState = LOW;
 bool energySaveActive = false;
 
-// home
 uint8_t activeAction = 0;
-
+// Print Function
 void print(String message)
 {
   Serial.println(message);
 }
 
+// Get Device Unique Id
 String GetEspUniqueId()
 {
   uint64_t chipid = ESP.getEfuseMac();  // Returns the MAC address (48 bits)
@@ -46,6 +46,7 @@ String GetEspUniqueId()
   return String(uniqueID); // Return as String
 }
 
+// Advertise Bluetooth MicroController (ESP32)
 void AdvertiseBLE()
 {
   // Get unique ID
@@ -65,6 +66,7 @@ void AdvertiseBLE()
   print("Ble Advertising Started...");
 }
 
+// Connect To Wifi For Api Calls
 void ConnectWifi()
 {
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -79,6 +81,7 @@ void ConnectWifi()
   Serial.println("\nWiFi connected");
 }
 
+// Get Active Action (Lock or Unlock Door)
 void MakeRequest(const String &url)
 {
   if (WiFi.status() == WL_CONNECTED)
@@ -109,6 +112,7 @@ void MakeRequest(const String &url)
   }
 }
 
+// Generic Function For API call
 void SmartLockPostman(const String &url, int number)
 {
   if (WiFi.status() == WL_CONNECTED)
