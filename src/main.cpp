@@ -9,9 +9,6 @@
 #include <HTTPClient.h>
 // #include <ArduinoJson.h>
 
-// #define REED_PIN 4 // GPIO connected to reed switch
-// #define LED_PIN 2  // GPIO connected to LED (e.g., onboard LED)
-
 #define REED_PIN 27   // Reed switch (LOW when door closed)
 #define PIR_PIN 33    // PIR sensor (HIGH when motion detected)
 #define LED_PIN 23    // Status LED
@@ -21,7 +18,7 @@
 // Status LED
 
 // Timing constants
-const unsigned long MOTION_TIMEOUT = 30000;     // 30 sec no motion = energy save
+const unsigned long MOTION_TIMEOUT = 15000;     // 30 sec no motion = energy save
 const unsigned long BLINK_INTERVAL = 500;       // 500ms blink speed
 const unsigned long DOOR_ALERT_DURATION = 5000; // 5 sec LED on for door alerts
 
@@ -33,8 +30,6 @@ bool ledState = LOW;
 bool energySaveActive = false;
 
 // home
-// const char *apiUrl = "https://smartlock-nestapi.onrender.com/doors/test";
-const char *apiUrl = "http://192.168.0.104:3000/actions/active-action";
 uint8_t activeAction = 0;
 
 void print(String message)
@@ -58,7 +53,6 @@ void AdvertiseBLE()
   // print(deviceName);
   // BLEDevice::init(deviceName.c_str()); // Convert String to const char*
 
-  // for testing
   // BLEDevice::init(DEVICE_ID);
   BLEDevice::init("Device_F073AF6CDDA0");
 
@@ -96,10 +90,10 @@ void MakeRequest(const String &url)
 
     if (httpResponseCode > 0)
     {
-      Serial.println("Active Action ...");
+      // Serial.println("Active Action ...");
       String payload = http.getString();
-      Serial.println("Response code: " + String(httpResponseCode));
-      Serial.println("Response payload: " + payload);
+      // Serial.println("Response code: " + String(httpResponseCode));
+      // Serial.println("Response payload: " + payload);
       activeAction = payload.toInt();
     }
     else
@@ -113,8 +107,6 @@ void MakeRequest(const String &url)
   {
     Serial.println("WiFi not connected");
   }
-
-  // delay(10000); // Wait 10 seconds before next request
 }
 
 void SmartLockPostman(const String &url, int number)
@@ -134,8 +126,8 @@ void SmartLockPostman(const String &url, int number)
     {
       String response = http.getString();
       Serial.println("POST success:");
-      Serial.println("Code: " + String(httpResponseCode));
-      Serial.println("Response: " + response);
+      // Serial.println("Code: " + String(httpResponseCode));
+      // Serial.println("Response: " + response);
     }
     else
     {
@@ -173,20 +165,6 @@ void setup()
 
   // bluetooth code
   AdvertiseBLE();
-
-  // sendPostRequestWithBooleanSimple(apiUrl, false);
-  // MakeRequest("http://192.168.0.104:3000/actions/active-action");
-
-  // String apiUrl = "http://example.com/api";
-  // // String result = sendGetRequest(apiUrl);
-  // String result = sendGetRequest();
-
-  // Serial.println("API Response:");
-  // Serial.println(result);
-
-  // Get unique ID
-  // String deviceName = "Device_" + GetEspUniqueId();
-  // print(deviceName);
 }
 
 void loop()
@@ -211,7 +189,8 @@ void loop()
   bool shouldEnergySave = (currentMillis - lastMotionTime > MOTION_TIMEOUT);
 
   // Energy save activation
-  if (shouldEnergySave && !energySaveActive)
+  // if (shouldEnergySave && !energySaveActive)
+  if (shouldEnergySave)
   {
     energySaveActive = true;
     Serial.println("\n🚨 ENERGY SAVING MODE ACTIVATED!");
@@ -266,12 +245,12 @@ void loop()
   {
     lastStatusUpdate = currentMillis;
     // Serial.print(isDoorClosed ? "🚪 CLOSED    | " : "🚪 OPEN      | ");
-    Serial.print(isMotionDetected ? "👥 OCCUPIED | " : "👤 EMPTY    | ");
-    Serial.println(energySaveActive ? "🔴 ENERGY SAVE" : "🟢 NORMAL");
+    // Serial.println(energySaveActive ? "🔴 ENERGY SAVE" : "🟢 NORMAL");
 
-    print("empty check api called.");
+    // print("empty check api called.");
     if (isMotionDetected)
     {
+      Serial.print(isMotionDetected ? "👥 OCCUPIED | " : "👤 EMPTY    | ");
 
       SmartLockPostman(String(BASE_URL) + "/actions/smartlock-postman", 5);
     }
@@ -285,30 +264,24 @@ void loop()
 
   MakeRequest(String(BASE_URL) + "/actions/active-action");
 
-  Serial.println(activeAction);
+  // Active Action
 
   switch (activeAction)
   {
   case 1:
     Serial.println("Lock the door.");
-    digitalWrite(LED_UNLOCK, LOW);
     SmartLockPostman(String(BASE_URL) + "/actions/smartlock-postman", 1);
-    print("manage led for door locked");
+    digitalWrite(LED_UNLOCK, LOW);
     digitalWrite(LED_LOCK, HIGH);
 
     break;
   case 2:
     Serial.println("Unlock the door..");
 
-    digitalWrite(LED_LOCK, LOW);
     SmartLockPostman(String(BASE_URL) + "/actions/smartlock-postman", 2);
+    digitalWrite(LED_LOCK, LOW);
     digitalWrite(LED_UNLOCK, HIGH);
-    print("manage led for door unlocked");
     break;
-
-    // default:
-    //   break;
   }
   delay(2000);
-  // delay(10000);
 }
